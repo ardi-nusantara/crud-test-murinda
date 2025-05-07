@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Preorder {% endblock %}
+{% block content %}
+    {% for object in object_list %}
+        <div class="modal fade" id="deleteModal{{ object.pk }}" tabindex="-1"
+             aria-labelledby="deleteModalLabel{{ object.pk }}" data-bs-keyboard="false" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel{{ object.pk }}">Konfirmasi Hapus</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="fs-14">
+                            Apakah Anda yakin ingin menghapus Preorder <b>{{ object.nomor_po }}</b>?
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <a href="{% url 'preorder:preorder-delete' object.pk %}"
+                           class="btn btn-danger">Hapus</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card custom-card">
+                <div class="card-header justify-content-between align-items-center d-sm-flex d-block">
+                    <div class="card-title mb-sm-0 mb-2">
+                        Daftar Preorder
+                    </div>
+                    <div class="btn-group">
+                        <a type="button" href="{% url 'preorder:preorder-create' %}"
+                           class="btn btn-md btn-primary">
+                            Input Preorder
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="datatable-basic" class="table table-bordered text-nowrap w-100">
+                            <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Nomor PO</th>
+                                <th>Tanggal</th>
+                                <th>Pemasok</th>
+                                <th>Gudang</th>
+                                <th>Alamat Kirim</th>
+                                <th>Kode Barang</th>
+                                <th>Aksi</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for object in object_list %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ object.nomor_po }}</td>
+                                    <td>{{ object.tanggal }}</td>
+                                    <td>{{ object.pemasok }}</td>
+                                    <td>{{ object.gudang }}</td>
+                                    <td>{{ object.gudang.alamat }}</td>
+                                    <td>{{ object.kode_barang.kode }}</td>
+                                    <td>
+                                        <a type="button"
+                                           href="{% url 'preorder:preorder-detail' object.pk %}"
+                                           class="btn btn-warning btn-sm">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                        <a type="button"
+                                           href="{% url 'preorder:preorder-update' object.pk %}"
+                                           class="btn btn-primary btn-sm">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a type="button"
+                                           href="#"
+                                           class="btn btn-danger btn-sm"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#deleteModal{{ object.pk }}">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

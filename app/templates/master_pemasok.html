@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Master Pemasok {% endblock %}
+{% block content %}
+    {% for object in object_list %}
+        <div class="modal fade" id="deleteModal{{ object.pk }}" tabindex="-1"
+             aria-labelledby="deleteModalLabel{{ object.pk }}" data-bs-keyboard="false" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel{{ object.pk }}">Konfirmasi Hapus</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="fs-14">
+                            Apakah Anda yakin ingin menghapus Master Pemasok <b>{{ object.kode }} - {{ object.nama }}</b>?
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <a href="{% url 'app:master-pemasok-delete' object.pk %}"
+                           class="btn btn-danger">Hapus</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card custom-card">
+                <div class="card-header justify-content-between align-items-center d-sm-flex d-block">
+                    <div class="card-title mb-sm-0 mb-2">
+                        Daftar Master Pemasok
+                    </div>
+                    <div class="btn-group">
+                        <a type="button" href="{% url 'app:master-pemasok-create' %}"
+                           class="btn btn-md btn-primary">
+                            Input Master Pemasok
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="datatable-basic" class="table table-bordered text-nowrap w-100">
+                            <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Kode</th>
+                                <th>Nama</th>
+                                <th>Aksi</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for object in object_list %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ object.kode }}</td>
+                                    <td>{{ object.nama }}</td>
+                                    <td>
+                                        <a type="button"
+                                           href="{% url 'app:master-pemasok-detail' object.pk %}"
+                                           class="btn btn-warning btn-sm">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                        <a type="button"
+                                           href="{% url 'app:master-pemasok-update' object.pk %}"
+                                           class="btn btn-primary btn-sm">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a type="button"
+                                           href="#"
+                                           class="btn btn-danger btn-sm"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#deleteModal{{ object.pk }}">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

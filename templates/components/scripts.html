@@ -1,0 +1,117 @@
+{% load static %}
+<!-- Main Js -->
+<script src="{% static 'assets/js/main.js' %}"></script>
+
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.js"
+        integrity="sha512-+k1pnlgt4F1H8L7t3z95o3/KO+o78INEcXTbnoJQ/F2VqDVhWoaiVml/OEHv9HsVgxUaVW+IbiZPUJQfF/YxZw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- Datatables Cdn -->
+<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.3.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.6/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- Internal Datatables JS -->
+<script src="{% static 'assets/js/datatables.js' %}"></script>
+
+<!-- Popper JS -->
+<script src="{% static 'assets/libs/@popperjs/core/umd/popper.min.js' %}"></script>
+
+<!-- Bootstrap JS -->
+<script src="{% static 'assets/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- Node Waves JS-->
+<script src="{% static 'assets/libs/node-waves/waves.min.js' %}"></script>
+
+<!-- Simplebar JS -->
+<script src="{% static 'assets/libs/simplebar/simplebar.min.js' %}"></script>
+<script src="{% static 'assets/js/simplebar.js' %}"></script>
+
+<!-- Color Picker JS -->
+<script src="{% static 'assets/libs/@simonwep/pickr/pickr.es5.min.js' %}"></script>
+
+<!-- Choices JS -->
+<script src="{% static 'assets/libs/choices.js/public/assets/scripts/choices.min.js' %}"></script>
+
+<!-- Prism JS -->
+<script src="{% static 'assets/libs/prismjs/prism.js' %}"></script>
+<script src="{% static 'assets/js/prism-custom.js' %}"></script>
+
+<!-- Toast JS -->
+<script src="{% static 'assets/js/Toasts.js' %}"></script>
+
+<!-- Sticky JS -->
+<script src="{% static 'assets/js/sticky.js' %}"></script>
+
+<!-- Defaultmenu JS -->
+<script src="{% static 'assets/js/defaultmenu.js' %}"></script>
+
+<!-- Custom-Switcher JS -->
+<script src="{% static 'assets/js/custom-switcher.min.js' %}"></script>
+
+<!-- Scroll To Top -->
+<div class="scrollToTop">
+    <span class="arrow"><i class="ri-arrow-up-s-fill fs-20"></i></span>
+</div>
+
+<div id="responsive-overlay"></div>
+<!-- Scroll To Top -->
+
+<!-- Date & Time Picker JS -->
+<script src="{% static 'assets/libs/flatpickr/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/js/date&time_pickers.js' %}"></script>
+
+<script type="text/javascript" src="{% static 'js/formatCurrency.js' %}"></script>
+<script src="{% static 'js/formatter.js' %}"></script>
+<script src="{% static 'js/dateInputField.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Loop melalui setiap elemen toast dan tampilkan
+        var toastElements = document.querySelectorAll('.toast');
+        toastElements.forEach(function (toastElement) {
+            var toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            setTimeout(function () {
+                toastElement.classList.add('hide-toast');
+            }, 2000);
+        });
+    });
+
+    // Ambil semua elemen dengan kelas 'tanggalMulai'
+    var tanggalMulaiElems = document.querySelectorAll('#ubahTanggal');
+
+    // Array untuk nama bulan dalam bahasa Indonesia
+    var namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+    tanggalMulaiElems.forEach(function (elem) {
+        // Ambil nilai tanggal dari setiap elemen
+        var tanggalMulaiStr = elem.innerText;
+
+        // Konversi string tanggal menjadi objek Date di JavaScript
+        var tanggalMulaiObj = new Date(tanggalMulaiStr.substr(0, 4), // tahun
+            tanggalMulaiStr.substr(4, 2) - 1, // bulan (0-11)
+            tanggalMulaiStr.substr(6, 2)); // tanggal
+
+        // Format tanggal ke format "dd MMMM yyyy" (misalnya, "13 Maret 2021")
+        var tanggalFormatted = tanggalMulaiObj.getDate() + ' ' +
+            namaBulan[tanggalMulaiObj.getMonth()] + ' ' +
+            tanggalMulaiObj.getFullYear();
+
+        // Tampilkan tanggal yang telah diformat ke dalam elemen HTML
+        elem.innerText = tanggalFormatted;
+    });
+</script>

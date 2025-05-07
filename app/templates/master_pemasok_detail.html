@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Detail {% endblock %}
+{% block content %}
+    <div class="card custom-card">
+        <div class="card-header">
+            <div class="card-title">
+                Detail Master Pemasok
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive px-4">
+                <table class="table text-nowrap table-striped-columns">
+                    <tbody>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Kode</td>
+                        <td class="col-sm-4">{{ object.kode }}</td>
+                        <td class="col-sm-2 fw-bold">Nama</td>
+                        <td class="col-sm-4">{{ object.nama }}</td>
+                    </tr>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Alamat</td>
+                        <td class="col-sm-10">{{ object.alamat }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+asgiref = "==3.7.2"
+django = "==5.0.3"
+sqlparse = "==0.4.4"
+tzdata = "==2024.1"
+django-crispy-forms = "*"
+whitenoise = "*"
+psycopg2 = "*"
+python-decouple = "*"
+dj-database-url = "*"
+django-tables2 = "*"
+django-dynamic-formsets = "*"
+django-cleanup = "*"
+django-ninja = "*"
+requests = "*"
+crispy-bootstrap5 = "*"
+pillow = "*"
+[dev-packages]
+
+[requires]
+python_version = "3.11"

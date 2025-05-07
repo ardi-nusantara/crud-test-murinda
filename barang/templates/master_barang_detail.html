@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Detail {% endblock %}
+{% block content %}
+    <div class="card custom-card">
+        <div class="card-header">
+            <div class="card-title">
+                Detail Master Barang
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive px-4">
+                <table class="table text-nowrap table-striped-columns">
+                    <tbody>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Kode</td>
+                        <td class="col-sm-4">{{ object.kode }}</td>
+                        <td class="col-sm-2 fw-bold">Nama</td>
+                        <td class="col-sm-4">{{ object.nama }}</td>
+                    </tr>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Tipe</td>
+                        <td class="col-sm-4">{{ object.tipe }}</td>
+                        <td class="col-sm-2 fw-bold">Level</td>
+                        <td class="col-sm-4">{{ object.level }}</td>
+                    </tr>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Induk</td>
+                        <td class="col-sm-4">{{ object.induk }}</td>
+                        <td class="col-sm-2 fw-bold">Satuan</td>
+                        <td class="col-sm-4">{{ object.satuan }}</td>
+                    </tr>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Harga</td>
+                        <td class="col-sm-4">Rp{{ object.harga }}</td>
+                        <td class="col-sm-2 fw-bold">Qty Stok</td>
+                        <td class="col-sm-4">{{ object.qtystok }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

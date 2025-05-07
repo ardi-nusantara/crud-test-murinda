@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Detail {% endblock %}
+{% block content %}
+    <div class="card custom-card">
+        <div class="card-header">
+            <div class="card-title">
+                Detail Terima Barang
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive px-4">
+                <table class="table text-nowrap table-striped-columns">
+                    <tbody>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Nomor Terima</td>
+                        <td class="col-sm-4">{{ object.nomor_terima }}</td>
+                        <td class="col-sm-2 fw-bold">Tanggal</td>
+                        <td class="col-sm-4">{{ object.tanggal }}</td>
+                    </tr>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Pemasok</td>
+                        <td class="col-sm-4">{{ object.pemasok }}</td>
+                        <td class="col-sm-2 fw-bold">Gudang</td>
+                        <td class="col-sm-4">{{ object.pemasok.gudang }}</td>
+                    </tr>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Nomor PO</td>
+                        <td class="col-sm-4">{{ object.pemasok.nomor_po }}</td>
+                        <td class="col-sm-2 fw-bold">Kode Barang</td>
+                        <td class="col-sm-4">{{ object.kode_barang }}</td>
+                    </tr>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Qty Terima</td>
+                        <td class="col-sm-10">{{ object.QtyTerima }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

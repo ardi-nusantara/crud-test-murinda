@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="dark" loader="disable"
+      data-menu-styles="dark" data-toggled="close">
+
+<head>
+    <!-- Meta Data -->
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>
+        CRUD - {% block title %}{% endblock %}
+    </title>
+
+    <!-- Start::styles -->
+    {% include 'components/styles.html' %}
+    {% block styles %}{% endblock %}
+    <!-- End::styles -->
+</head>
+
+<body class="">
+<!-- TOAST -->
+{% for message in messages %}
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-5">
+        <div class="toast align-items-center text-bg-{{ message.tags }} border-0 fade hide mb-4" role="alert"
+             aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+<!-- TOAST -->
+
+<!-- Loader -->
+<div id="loader">
+    <img src="{% static 'assets/images/media/loader.svg' %}" alt="">
+</div>
+<!-- Loader -->
+
+<div class="page">
+    {% include 'components/header.html' %}
+    {% include 'components/sidebar.html' %}
+
+    <!-- Start::app-content -->
+    <div class="main-content app-content">
+        <div class="container-fluid my-4">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    <!-- End::app-content -->
+</div>
+
+<!-- END PAGE-->
+
+<!-- Start::scripts -->
+{% include 'components/scripts.html' %}
+{% block scripts %}
+{% endblock %}
+<!-- End::scripts -->
+</body>
+</html>

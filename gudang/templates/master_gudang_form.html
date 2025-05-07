@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %} Form {% endblock %}
+{% block content %}
+    <div class="card custom-card">
+        <div class="card-header">
+            <h1 class="page-title fw-semibold fs-18 mb-0">
+                {% if action_type == 'create' %}
+                    Input
+                {% elif action_type == 'update' %}
+                    Ubah
+                {% endif %}
+                Master Gudang
+            </h1>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="mb-5" action="{{ submit_url }}"
+            >
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="d-flex flex-row-reverse">
+                    <button id="submit-btn" type="submit" value="submit"
+                            class="btn btn-primary center col-sm-2">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
