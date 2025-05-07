@@ -58,7 +58,7 @@
                                     <td>{{ forloop.counter }}</td>
                                     <td>{{ object.nomor_terima }}</td>
                                     <td>{{ object.tanggal }}</td>
-                                    <td>{{ object.pemasok }}</td>
+                                    <td>{{ object.pemasok.pemasok }}</td>
                                     <td>
                                         <a type="button"
                                            href="{% url 'terima-barang:terima-barang-detail' object.pk %}"

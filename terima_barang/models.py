@@ -8,7 +8,7 @@ class TerimaBarang(models.Model):
     tanggal = models.DateField()
     pemasok = models.ForeignKey(PreOrder, on_delete=models.CASCADE, related_name='preorder')
     kode_barang = models.CharField(max_length=255)
-    QtyTerima = models.IntegerField()
+    qty_terima = models.IntegerField()
 
     def __str__(self):
         return f'{self.nomor_terima} - {self.tanggal}'
