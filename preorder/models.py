@@ -11,9 +11,9 @@ class PreOrder(models.Model):
     pemasok = models.ForeignKey(MasterPemasok, on_delete=models.CASCADE)
     gudang = models.ForeignKey(MasterGudang, on_delete=models.CASCADE)
     kode_barang = models.ForeignKey(MasterBarang, on_delete=models.CASCADE)
-    QtyPO = models.IntegerField()
+    qty_po = models.IntegerField()
     harga = models.IntegerField()
-    qty_terima = models.IntegerField()
+    qty_terima = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.nomor_po} - {self.tanggal}'

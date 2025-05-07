@@ -5,7 +5,7 @@
     <div class="card custom-card">
         <div class="card-header">
             <div class="card-title">
-                Detail Master Gudang
+                Detail Preorder
             </div>
         </div>
         <div class="card-body">
@@ -28,7 +28,11 @@
                         <td class="col-sm-2 fw-bold">Kode Barang</td>
                         <td class="col-sm-4">{{ object.kode_barang }}</td>
                         <td class="col-sm-2 fw-bold">Qty PO</td>
-                        <td class="col-sm-4">{{ object.QtyPO }}</td>
+                        <td class="col-sm-4">{{ object.qty_po }}</td>
+                    </tr>
+                    <tr class="row">
+                        <td class="col-sm-2 fw-bold">Alamat Kirim</td>
+                        <td class="col-sm-10">{{ object.gudang.alamat }}</td>
                     </tr>
                     </tbody>
                 </table>
