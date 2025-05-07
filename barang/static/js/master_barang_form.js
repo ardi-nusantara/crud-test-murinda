@@ -7,7 +7,6 @@ $(document).ready(function () {
 
     function setFieldState(fields, disabled, required, clearValue = true) {
         fields.forEach(field => {
-            console.log('field = ', field, 'disabled = ', disabled, 'required', required)
             field.prop('disabled', disabled).prop('required', required);
             if (clearValue) field.val('');
         });
