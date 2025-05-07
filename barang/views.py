@@ -10,38 +10,10 @@ from barang.models import MasterBarang
 
 
 def get_induk_choices(request):
-    """
-    Fetch induk choices based on kode and level from the request.
-    """
-    kode = request.GET.get('kode')
-    level = request.GET.get('level')
-
-    if not kode or not level:
-        return JsonResponse({'induk_choices': []})  # No data if inputs are missing
-
-    try:
-        # Determine the parent level (level - 1)
-        parent_level = int(level) - 1
-        if parent_level < 1:
-            return JsonResponse({'induk_choices': []})  # No valid parent level
-
-        # Extract induk base from kode
-        induk_code = ".".join(kode.split(".")[:parent_level])
-
-        # Query database for possible induk options (parent level items)
-        induk_queryset = MasterBarang.objects.filter(
-            kode__startswith=induk_code,
-            level=str(parent_level)
-        )
-
-        # Prepare choices as a list of tuples (value, label)
-        induk_choices = [
-            (item.kode, f"{item.kode} - {item.nama}") for item in induk_queryset
-        ]
-        print(induk_choices)
-        return JsonResponse({'induk_choices': induk_choices})
-    except Exception as e:
-        return JsonResponse({'induk_choices': [], 'error': str(e)}, status=400)
+    level = int(request.GET.get('level', 0))
+    tipe = request.GET.get('tipe', '')
+    induk_choices = MasterBarang.objects.filter(level=level, tipe=tipe).values('id', 'kode', 'nama')
+    return JsonResponse({'induk_choices': list(induk_choices)})
 
 
 class MasterBarangListView(SuccessMessageMixin, ListView):

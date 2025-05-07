@@ -1,87 +1,71 @@
 $(document).ready(function () {
-    // $('#id_induk').select2();
+    const tipeField = $('#id_tipe');
+    const levelField = $('#id_level');
+    const indukField = $('#id_induk');
+    const satuanField = $('#id_satuan');
+    const hargaField = $('#id_harga');
 
-    const tipeField = document.getElementById('id_tipe');
-    const kodeField = document.getElementById('id_kode');
-    const levelField = document.getElementById('id_level');
-    const indukField = document.getElementById('id_induk');
-    const satuanField = document.getElementById('id_satuan');
-    const hargaField = document.getElementById('id_harga');
+    function setFieldState(fields, disabled, required, clearValue = true) {
+        fields.forEach(field => {
+            console.log('field = ', field, 'disabled = ', disabled, 'required', required)
+            field.prop('disabled', disabled).prop('required', required);
+            if (clearValue) field.val('');
+        });
+    }
 
-    $("#id_provinsi").change(function () {
-        $.ajax({
-            type: 'GET',
-            url: '/applicant/load-cities/',
-            data: {
-                'province_id': $(this).val().split('_')[0]
-            },
-            success: function (data) {
-                $('#id_kota').empty();
-                $.each(data, function (index, item) {
-                    $('#id_kota').append(`<option value="${item[0]}">${item[1]}</option>`);
+    function initializeForm() {
+        setFieldState([indukField, satuanField, hargaField], true, false);
+    }
+
+    function updateIndukChoices() {
+        const level = parseInt(levelField.val());
+        if (isNaN(level) || (tipeField.val() === 'G' && level <= 1)) {
+            return setFieldState([indukField], true, false);
+        }
+
+
+        $.get('/master-barang/get_induk_choices/', {level: level - 1, tipe: 'G'})
+            .done(data => {
+                indukField.empty().append('<option value="">-----</option>');
+                data.induk_choices.forEach(choice => {
+                    indukField.append(`<option value="${choice.id}">${choice.kode} - ${choice.nama}</option>`);
                 });
-            }
-        });
-    });
-
-    async function fetchIndukChoices(kode, level) {
-        console.log('kode = ', kode, 'level = ', level);
-
-        await $.ajax({
-            type: 'GET',
-            url: '/master-barang/get_induk_choices/', // Adjust this URL if needed
-            data: {'kode': kode, 'level': level}, // Pass the `kode` and `level` as query parameters
-            success: function (result) {
-                indukChoices = result.induk_choices || [];
-            },
-            error: function (xhr, status, error) {
-                console.error(`Failed to fetch induk choices: ${error}`);
-            }
-        });
-
-        return indukChoices; // Return the populated choices
+                setFieldState([indukField], false, true, false);
+            })
+            .fail(() => console.error('Failed to fetch induk choices.'));
     }
 
     function updateFormFields() {
-        /**
-         * Apply the rules for enabling/disabling fields based on tipe and level.
-         */
-        const tipe = tipeField.value;
-        const level = parseInt(levelField.value);
-
-        indukField.disabled = false;
-        satuanField.disabled = false;
-        hargaField.disabled = false;
+        const tipe = tipeField.val(), level = parseInt(levelField.val());
 
         if (tipe === 'G') {
-            indukField.disabled = (level === 1);
-            satuanField.disabled = true;
-            satuanField.value = '';
-            hargaField.disabled = true;
-            hargaField.value = '';
-        }
-
-        if (tipe === 'D') {
-            indukField.disabled = false;
-            satuanField.disabled = false;
-            hargaField.disabled = false;
+            if (level === 1) {
+                setFieldState([indukField, satuanField, hargaField], true, false);
+            } else if (level > 1) {
+                setFieldState([indukField], false, true, false);
+                setFieldState([satuanField, hargaField], true, false);
+            }
+        } else if (tipe === 'D') {
+            setFieldState([indukField, satuanField, hargaField], false, true);
         }
     }
 
-    // Attach event listeners for required fields
-    tipeField.addEventListener('change', function () {
-        updateFormFields();
-        updateIndukChoices();
+    $('form').on('submit', function (event) {
+        const tipe = tipeField.val(), level = parseInt(levelField.val());
+        if (tipe === 'G' && ((level === 1 && (indukField.val() || satuanField.val() || hargaField.val())) ||
+            (level > 1 && (!indukField.val() || satuanField.val() || hargaField.val())))) {
+            event.preventDefault();
+            alert('Validation error: Please check induk, satuan, and harga fields.');
+        } else if (tipe === 'D' && (!indukField.val() || !satuanField.val() || !hargaField.val())) {
+            event.preventDefault();
+            alert('Validation error: For tipe "D", all fields are required.');
+        }
     });
 
-    levelField.addEventListener('change', function () {
+    [tipeField, levelField].forEach(field => field.on('change', () => {
         updateFormFields();
         updateIndukChoices();
-    });
+    }));
 
-    kodeField.addEventListener('change', updateIndukChoices);
-
-    // Run logic on page load
-    updateFormFields();
-    updateIndukChoices(); // Ensures the dropdown is initialized correctly
+    initializeForm();
 });
