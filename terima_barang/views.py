@@ -1,11 +1,19 @@
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
-from django.shortcuts import redirect
+from django.db import transaction
+from django.http import JsonResponse
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
 
+from preorder.models import PreOrder
 from terima_barang.forms import TerimaBarangForm
 from terima_barang.models import TerimaBarang
+
+
+def get_preorder_qty_po(request, id):
+    preorder = get_object_or_404(PreOrder, pk=id)
+    return JsonResponse({'qty_po': preorder.qty_po})
 
 
 class TerimaBarangListView(SuccessMessageMixin, ListView):
@@ -29,6 +37,15 @@ class TerimaBarangCreateView(SuccessMessageMixin, CreateView):
         context['action_type'] = 'create'
         context['submit_url'] = reverse('terima-barang:terima-barang-create')
         return context
+
+    def form_valid(self, form):
+        with transaction.atomic():
+            qty_terima = form.cleaned_data['qty_terima']
+            preorder = PreOrder.objects.get(pk=form.cleaned_data['pemasok'])
+            preorder.qty_po = preorder.qty_po - qty_terima
+            preorder.qty_terima = preorder.qty_terima + qty_terima
+            preorder.save()
+        return super().form_valid(form)
 
 
 class TerimaBarangUpdateView(SuccessMessageMixin, UpdateView):

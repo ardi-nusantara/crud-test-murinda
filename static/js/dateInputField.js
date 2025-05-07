@@ -32,4 +32,21 @@ $(document).ready(function () {
             }
         });
     });
+
+    $("form").on("submit", function (e) {
+        let invalidFields = false;
+
+        $('.dateinput').each(function () {
+            // Check if the date input has the 'is-invalid' class
+            if ($(this).hasClass('is-invalid')) {
+                invalidFields = true; // Mark form as having invalid fields
+            }
+        });
+
+        if (invalidFields) {
+            e.preventDefault(); // Block form submission
+            alert("Ada tanggal yang tidak valid. Perbaiki sebelum mengirimkan formulir.");
+        }
+    });
+
 });

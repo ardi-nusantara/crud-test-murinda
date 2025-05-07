@@ -18,4 +18,21 @@ $(document).ready(function () {
             }
         });
     });
+
+    $("form").on("submit", function (e) {
+        let invalidFields = false;
+
+        $('.numberinput').each(function () {
+            // Check if the number input has the 'is-invalid' class
+            if ($(this).hasClass('is-invalid')) {
+                invalidFields = true; // Mark form as having invalid fields
+            }
+        });
+
+        if (invalidFields) {
+            e.preventDefault(); // Block form submission
+            alert("Ada nilai yang tidak valid. Pastikan tidak ada angka negatif sebelum mengirimkan formulir.");
+        }
+    });
+
 });
