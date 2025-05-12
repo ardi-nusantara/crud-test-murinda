@@ -41,7 +41,7 @@ class TerimaBarangCreateView(SuccessMessageMixin, CreateView):
     def form_valid(self, form):
         with transaction.atomic():
             qty_terima = form.cleaned_data['qty_terima']
-            preorder = PreOrder.objects.get(pk=form.cleaned_data['pemasok'])
+            preorder = PreOrder.objects.get(pk=form.cleaned_data['pemasok'].pk)
             preorder.qty_po = preorder.qty_po - qty_terima
             preorder.qty_terima = preorder.qty_terima + qty_terima
             preorder.save()

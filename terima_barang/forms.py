@@ -12,4 +12,4 @@ class TerimaBarangForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         queryset = PreOrder.objects.filter(qty_po__gte=1)
-        self.fields['pemasok'].queryset = queryset
+        self.fields['preorder'].queryset = queryset

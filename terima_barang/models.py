@@ -6,7 +6,7 @@ from preorder.models import PreOrder
 class TerimaBarang(models.Model):
     nomor_terima = models.CharField(max_length=255, unique=True)
     tanggal = models.DateField()
-    pemasok = models.ForeignKey(PreOrder, on_delete=models.CASCADE, related_name='preorder')
+    preorder = models.ForeignKey(PreOrder, on_delete=models.CASCADE, related_name='preorder')
     kode_barang = models.CharField(max_length=255)
     qty_terima = models.IntegerField()
 
