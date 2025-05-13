@@ -2,7 +2,6 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import F
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import redirect, get_object_or_404
@@ -10,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
 
 from barang.models import MasterBarang
-from preorder.models import PreOrder, PreOrderDetail
+from preorder.models import PreOrderDetail
 from terima_barang.forms import TerimaBarangForm, TerimaBarangDetailForm
 from terima_barang.models import TerimaBarang, TerimaBarangDetail
 
@@ -124,6 +123,60 @@ class TerimaBarangUpdateView(SuccessMessageMixin, UpdateView):
             context['TerimaBarangFormSet'] = TerimaBarangFormSet(instance=self.object)
         return context
 
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['TerimaBarangFormSet']
+
+        if formset.is_valid():
+            with transaction.atomic():
+                self.object = form.save()
+
+                # Get the original details before updating
+                original_details = TerimaBarangDetail.objects.filter(terima_barang=self.object)
+                original_data = {
+                    detail.kode_barang_id: detail.qty_terima for detail in original_details
+                }
+
+                # Save the updated details
+                formset.instance = self.object
+                formset.save()
+
+                # Adjust stocks based on the differences
+                updated_details = TerimaBarangDetail.objects.filter(terima_barang=self.object)
+                for detail in updated_details:
+                    barang = detail.kode_barang
+                    original_qty = original_data.get(barang.id, 0)
+                    updated_qty = detail.qty_terima
+                    delta_qty = updated_qty - original_qty
+
+                    # Adjust MasterBarang stock
+                    barang.qtystok += delta_qty
+                    barang.save()
+
+                    # Adjust PreOrderDetail qty_terima
+                    preorder_detail = PreOrderDetail.objects.get(
+                        preorder=self.object.preorder, kode_barang=barang
+                    )
+                    preorder_detail.qty_terima += delta_qty
+                    preorder_detail.save()
+
+                # Handle deletions from the formset
+                for barang_id, original_qty in original_data.items():
+                    if barang_id not in [detail.kode_barang_id for detail in updated_details]:
+                        barang = MasterBarang.objects.get(id=barang_id)
+                        barang.qtystok -= original_qty
+                        barang.save()
+
+                        preorder_detail = PreOrderDetail.objects.get(
+                            preorder=self.object.preorder, kode_barang=barang
+                        )
+                        preorder_detail.qty_terima -= original_qty
+                        preorder_detail.save()
+
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
+
 
 class TerimaBarangDeleteView(SuccessMessageMixin, DeleteView):
     model = TerimaBarang
@@ -131,6 +184,27 @@ class TerimaBarangDeleteView(SuccessMessageMixin, DeleteView):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
+        # Reverse related stocks and PreOrderDetails
+        terima_barang_details = TerimaBarangDetail.objects.filter(terima_barang=self.object)
+
+        with transaction.atomic():
+            for detail in terima_barang_details:
+                barang = detail.kode_barang
+
+                # Reverse MasterBarang stock
+                barang.qtystok -= detail.qty_terima
+                barang.save()
+
+                # Reverse PreOrderDetail qty_terima
+                preorder_detail = PreOrderDetail.objects.get(
+                    preorder=self.object.preorder,
+                    kode_barang=barang
+                )
+                preorder_detail.qty_terima -= detail.qty_terima
+                preorder_detail.save()
+
+            # Delete the main object and details
+            self.object.delete()
+
         messages.success(request, 'Terima Barang Berhasil Dihapus!')
-        self.object.delete()
         return redirect(self.get_success_url())
