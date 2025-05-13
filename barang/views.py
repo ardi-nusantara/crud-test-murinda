@@ -38,6 +38,21 @@ class MasterBarangCreateView(SuccessMessageMixin, CreateView):
         context['submit_url'] = reverse('barang:master-barang-create')
         return context
 
+    def form_valid(self, form):
+        # Save the current master barang object
+        response = super().form_valid(form)
+        master_barang = form.instance
+
+        # If the type is 'Detail', update the qtystok of all induk (parents)
+        if master_barang.tipe == 'D' and master_barang.qtystok:
+            current = master_barang.induk
+            while current:  # Traverse the chain of parents
+                current.qtystok += master_barang.qtystok
+                current.save()
+                current = current.induk  # Move to the next parent
+
+        return response
+
 
 class MasterBarangUpdateView(SuccessMessageMixin, UpdateView):
     model = MasterBarang

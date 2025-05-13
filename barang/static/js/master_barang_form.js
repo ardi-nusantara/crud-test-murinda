@@ -4,6 +4,21 @@ $(document).ready(function () {
     const indukField = $('#id_induk');
     const satuanField = $('#id_satuan');
     const hargaField = $('#id_harga');
+    const qtystokFieldWrapper = $('#div_id_qtystok');
+    const qtystokField = $('#id_qtystok');
+
+
+    function qtystokFieldDisplay() {
+        if (tipeField.val() === 'D') {
+            qtystokFieldWrapper.show();
+            qtystokField.prop('required', true);
+        } else {
+            qtystokField.val('');
+            qtystokField.prop('required', false);
+            qtystokFieldWrapper.hide();
+        }
+    }
+
 
     function setFieldState(fields, disabled, required, clearValue = true) {
         fields.forEach(field => {
@@ -13,7 +28,11 @@ $(document).ready(function () {
     }
 
     function initializeForm() {
-        setFieldState([indukField, satuanField, hargaField], true, false);
+        const isUpdateForm = satuanField.val() || hargaField.val() || indukField.val();
+
+        if (!isUpdateForm) {
+            setFieldState([indukField, satuanField, hargaField], true, false);
+        }
     }
 
     function updateIndukChoices() {
@@ -27,7 +46,8 @@ $(document).ready(function () {
             .done(data => {
                 indukField.empty().append('<option value="">-----</option>');
                 data.induk_choices.forEach(choice => {
-                    indukField.append(`<option value="${choice.id}">${choice.kode} - ${choice.nama}</option>`);
+                    const isSelected = choice.id === parseInt(indukField.val()); // Preserve selection for an update form
+                    indukField.append(`<option value="${choice.id}" ${isSelected ? 'selected' : ''}>${choice.kode} - ${choice.nama}</option>`);
                 });
                 setFieldState([indukField], false, true, false);
             })
@@ -66,5 +86,13 @@ $(document).ready(function () {
         updateIndukChoices();
     }));
 
+    // Initialize the form depending on its context (new or update)
     initializeForm();
+
+    // Handle qtystok field display based on tipe
+    qtystokFieldDisplay();
+
+    tipeField.on('change', function () {
+        qtystokFieldDisplay();
+    });
 });

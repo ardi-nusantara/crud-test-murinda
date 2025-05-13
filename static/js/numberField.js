@@ -31,7 +31,7 @@ $(document).ready(function () {
 
         if (invalidFields) {
             e.preventDefault(); // Block form submission
-            alert("Ada nilai yang tidak valid. Pastikan tidak ada angka negatif sebelum mengirimkan formulir.");
+            alert("Ada nilai yang tidak valid. Perbaiki sebelum mengirimkan formulir.");
         }
     });
 

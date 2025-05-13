@@ -1,11 +1,14 @@
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
-from django.shortcuts import redirect
+from django.forms import inlineformset_factory
+from django.http import JsonResponse
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
 
-from preorder.forms import PreorderForm
-from preorder.models import PreOrder
+from barang.models import MasterBarang
+from preorder.forms import PreorderForm, PreorderDetailForm
+from preorder.models import PreOrder, PreOrderDetail
 
 
 class PreorderListView(SuccessMessageMixin, ListView):
@@ -16,6 +19,11 @@ class PreorderListView(SuccessMessageMixin, ListView):
 class PreorderDetailView(SuccessMessageMixin, DetailView):
     model = PreOrder
     template_name = 'preorder_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['details'] = PreOrderDetail.objects.filter(preorder=self.object)
+        return context
 
 
 class PreorderCreateView(SuccessMessageMixin, CreateView):
@@ -28,7 +36,27 @@ class PreorderCreateView(SuccessMessageMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['action_type'] = 'create'
         context['submit_url'] = reverse('preorder:preorder-create')
+
+        PreorderFormSet = inlineformset_factory(PreOrder, PreOrderDetail, form=PreorderDetailForm, extra=1,
+                                                can_delete=True)
+
+        if self.request.POST:
+            context['PreorderFormSet'] = PreorderFormSet(self.request.POST)
+        else:
+            context['PreorderFormSet'] = PreorderFormSet()
         return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        preorder_formset = context['PreorderFormSet']
+
+        if preorder_formset.is_valid():
+            preorder = form.save()
+            preorder_formset.instance = preorder
+            preorder_formset.save()
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
 
 
 class PreorderUpdateView(SuccessMessageMixin, UpdateView):
@@ -42,7 +70,28 @@ class PreorderUpdateView(SuccessMessageMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['action_type'] = 'update'
         context['submit_url'] = reverse('preorder:preorder-update', kwargs={'pk': self.object.pk})
+
+        PreorderFormSet = inlineformset_factory(PreOrder, PreOrderDetail, form=PreorderDetailForm, extra=0,
+                                                can_delete=True)
+
+        if self.request.POST:
+            context['PreorderFormSet'] = PreorderFormSet(self.request.POST, instance=self.object)
+        else:
+            context['PreorderFormSet'] = PreorderFormSet(instance=self.object)
         return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        preorder_formset = context['PreorderFormSet']
+
+        if preorder_formset.is_valid():
+            preorder = form.save()
+            preorder_formset.instance = preorder
+            preorder_formset.save()
+
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
 
 
 class PreorderDeleteView(SuccessMessageMixin, DeleteView):
