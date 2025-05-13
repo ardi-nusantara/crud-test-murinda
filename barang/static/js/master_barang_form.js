@@ -4,6 +4,21 @@ $(document).ready(function () {
     const indukField = $('#id_induk');
     const satuanField = $('#id_satuan');
     const hargaField = $('#id_harga');
+    const qtystokFieldWrapper = $('#div_id_qtystok');
+    const qtystokField = $('#id_qtystok');
+
+
+    function qtystokFieldDisplay() {
+        if (tipeField.val() === 'D') {
+            qtystokFieldWrapper.show();
+            qtystokField.prop('required', true);
+        } else {
+            qtystokField.val('');
+            qtystokField.prop('required', false);
+            qtystokFieldWrapper.hide();
+        }
+    }
+
 
     function setFieldState(fields, disabled, required, clearValue = true) {
         fields.forEach(field => {
@@ -67,4 +82,9 @@ $(document).ready(function () {
     }));
 
     initializeForm();
+    qtystokFieldDisplay();
+
+    tipeField.on('change', function () {
+        qtystokFieldDisplay();
+    });
 });
