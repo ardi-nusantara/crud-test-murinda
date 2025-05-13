@@ -1,6 +1,6 @@
 from django import forms
 
-from preorder.models import PreOrder
+from preorder.models import PreOrder, PreOrderDetail
 from terima_barang.models import TerimaBarang
 
 
@@ -11,5 +11,5 @@ class TerimaBarangForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        queryset = PreOrder.objects.filter(qty_po__gte=1)
+        queryset = PreOrder.objects.filter(preorderdetail__qty_po__gte=1).distinct()
         self.fields['preorder'].queryset = queryset

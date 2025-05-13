@@ -1,12 +1,21 @@
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.forms import inlineformset_factory
-from django.shortcuts import redirect
+from django.http import JsonResponse
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
 
+from barang.models import MasterBarang
 from preorder.forms import PreorderForm, PreorderDetailForm
 from preorder.models import PreOrder, PreOrderDetail
+
+
+def get_barang_qtystok(request):
+    kode_barang = request.GET.get('kode_barang')
+    print(kode_barang)
+    barang = get_object_or_404(MasterBarang, pk=kode_barang)
+    return JsonResponse({'qtystok': barang.qtystok})
 
 
 class PreorderListView(SuccessMessageMixin, ListView):
