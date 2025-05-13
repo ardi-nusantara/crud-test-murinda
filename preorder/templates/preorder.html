@@ -50,8 +50,6 @@
                                 <th>Tanggal</th>
                                 <th>Pemasok</th>
                                 <th>Gudang</th>
-                                <th>Alamat Kirim</th>
-                                <th>Kode Barang</th>
                                 <th>Aksi</th>
                             </tr>
                             </thead>
@@ -63,8 +61,6 @@
                                     <td>{{ object.tanggal }}</td>
                                     <td>{{ object.pemasok }}</td>
                                     <td>{{ object.gudang }}</td>
-                                    <td>{{ object.gudang.alamat }}</td>
-                                    <td>{{ object.kode_barang.kode }}</td>
                                     <td>
                                         <a type="button"
                                            href="{% url 'preorder:preorder-detail' object.pk %}"

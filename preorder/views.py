@@ -18,6 +18,11 @@ class PreorderDetailView(SuccessMessageMixin, DetailView):
     model = PreOrder
     template_name = 'preorder_detail.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['details'] = PreOrderDetail.objects.filter(preorder=self.object)
+        return context
+
 
 class PreorderCreateView(SuccessMessageMixin, CreateView):
     form_class = PreorderForm
