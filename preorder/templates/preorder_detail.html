@@ -38,6 +38,7 @@
                     <th scope="col" class="col-4 text-center">Kode Barang</th>
                     <th scope="col" class="col-4 text-center">Jumlah PO</th>
                     <th scope="col" class="col-3 text-center">Harga</th>
+                    <th scope="col" class="col-3 text-center">Jumlah Diterima</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -47,6 +48,7 @@
                         <td>{{ detail.kode_barang }}</td>
                         <td>{{ detail.qty_po }}</td>
                         <td>{{ detail.harga }}</td>
+                        <td>{{ detail.qty_terima }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>

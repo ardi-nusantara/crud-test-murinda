@@ -20,4 +20,4 @@ class PreOrderDetail(models.Model):
     kode_barang = models.ForeignKey(MasterBarang, on_delete=models.CASCADE)
     qty_po = models.IntegerField()
     harga = models.IntegerField()
-    qty_terima = models.IntegerField(blank=True, null=True)
+    qty_terima = models.IntegerField(default=0, blank=True, null=True)
