@@ -13,7 +13,6 @@ from preorder.models import PreOrder, PreOrderDetail
 
 def get_barang_qtystok(request):
     kode_barang = request.GET.get('kode_barang')
-    print(kode_barang)
     barang = get_object_or_404(MasterBarang, pk=kode_barang)
     return JsonResponse({'qtystok': barang.qtystok})
 

@@ -1,61 +1,155 @@
 $(document).ready(function () {
-    const pemasok = $("#id_pemasok");
-    const qtyTerima = $("#id_qty_terima");
-    const form = $("form");
-    const errorMessage = $('<div class="invalid-feedback" style="display: none; font-size: 12px; margin-top: 5px;">' +
-        '<b>Nilai Qty Terima tidak boleh melebihi <span id="max-qty">-</span>!</b></div>');
+    const $formsetDiv = $('#terima-barang-formset');
+    const $addRowButton = $('#add-row-btn');
+    const $totalFormsInput = $('#id_terimabarangdetail-TOTAL_FORMS');
+    const $preorderSelect = $('#id_preorder');
 
-    qtyTerima.parent().append(errorMessage);
+    let barangDropdownData = {};
 
-    let maxQty = null;
+    // Fetch available barang when PreOrder changes
+    $preorderSelect.on('change', function () {
+        const selectedPreorder = $(this).val();
 
-    pemasok.on("change", function () {
-        const selectedId = $(this).val();
-
-        if (!selectedId) {
-            // Reset if no valid selection
-            maxQty = null;
-            qtyTerima.val('');
-            errorMessage.hide();
-            qtyTerima.removeClass('is-invalid');
+        if (!selectedPreorder) {
+            // Reset dropdowns if no PreOrder is selected
+            $formsetDiv.find('select[name$="-kode_barang"]').empty().append('<option value="">-- Pilih Barang --</option>');
             return;
         }
 
         $.ajax({
-            url: `/terima-barang/preorder/${selectedId}/`,
-            method: "GET",
+            url: `/terima-barang/preorder/${selectedPreorder}/barang/`,
+            method: 'GET',
             success: function (response) {
-                maxQty = response.qty_po;
+                // Update barangDropdownData to store qtystok by barang.id
+                barangDropdownData = response.barang.reduce((acc, barang) => {
+                    acc[barang.id] = barang.qtystok;
+                    return acc;
+                }, {});
 
-                $("#max-qty").text(maxQty);
-                qtyTerima.attr("max", maxQty);
+                // Update all kode_barang dropdowns with the new options
+                $formsetDiv.find('select[name$="-kode_barang"]').each(function () {
+                    const $dropdown = $(this);
+                    $dropdown.empty().append('<option value="">-- Pilih Barang --</option>');
+                    response.barang.forEach(barang => {
+                        $dropdown.append(`<option value="${barang.id}">${barang.kode} - ${barang.nama} (Stok: ${barang.qtystok})</option>`);
+                    });
+                });
             },
             error: function () {
-                console.error("Failed to fetch qty_po value.");
-                maxQty = null;
-            },
+                console.error('Failed to fetch barang data.');
+            }
         });
     });
 
-    qtyTerima.on("input change", function () {
-        const qtyTerimaValue = parseInt($(this).val(), 10);
+    // Validate qty_terima in real-time
+    $formsetDiv.on('input', 'input[name$="-qty_terima"]', function () {
+        validateQty();
+    });
 
-        if (maxQty !== null && qtyTerimaValue > maxQty) {
-            errorMessage.show();
-            $(this).addClass("is-invalid");
+    // Add new row
+    $addRowButton.on('click', function (e) {
+        e.preventDefault();
+        const currentFormCount = parseInt($totalFormsInput.val(), 10);
+        const $newRow = $formsetDiv.find('.formset-row').first().clone();
+
+        // Update attributes in the new row
+        $newRow.html(
+            $newRow.html()
+                .replace(/-0-/g, `-${currentFormCount}-`)
+                .replace(/__prefix__/g, currentFormCount)
+        );
+
+        // Reset field values
+        $newRow.find('input, select').val('');
+        $newRow.find('.invalid-feedback').remove();
+        $formsetDiv.append($newRow);
+
+        $totalFormsInput.val(currentFormCount + 1);
+    });
+
+    // Remove row handler
+    $formsetDiv.on('click', '.remove-row-btn', function (e) {
+        e.preventDefault();
+        const $row = $(this).closest('.formset-row');
+
+        // Mark the row for deletion if it exists on the server, otherwise remove it
+        const $deleteCheckbox = $row.find('input[type="checkbox"][name$="-DELETE"]');
+        if ($deleteCheckbox.length) {
+            $deleteCheckbox.prop('checked', true); // Mark for deletion
+            $row.hide(); // Hide the row
         } else {
-            errorMessage.hide();
-            $(this).removeClass("is-invalid");
+            $row.remove(); // Remove from DOM
         }
+
+        updateIndexes(); // Update form indexes
+        validateQty(); // Revalidate the formset
     });
 
-    form.on("submit", function (e) {
-        const qtyTerimaValue = parseInt(qtyTerima.val(), 10);
+    // Validation logic
+    function validateQty() {
+        const barangTotals = {};
+        let isValid = true;
 
-        if (maxQty !== null && qtyTerimaValue > maxQty) {
-            e.preventDefault();
-            alert("Qty Terima tidak boleh melebihi Qty PO.");
-            qtyTerima.addClass("is-invalid");
+        // Calculate running totals per barang
+        $formsetDiv.find('.formset-row').each(function () {
+            const $row = $(this);
+            const barangId = $row.find('select[name$="-kode_barang"]').val(); // Use the selected barang.id
+            const qtyTerima = parseInt($row.find('input[name$="-qty_terima"]').val(), 10) || 0;
+
+            if (barangId) {
+                if (!barangTotals[barangId]) {
+                    barangTotals[barangId] = 0;
+                }
+                barangTotals[barangId] += qtyTerima;
+
+                // Check if the total exceeds the stock for the selected barang.id
+                if (barangTotals[barangId] > barangDropdownData[barangId]) {
+                    isValid = false;
+                    highlightError($row, `Total Qty Terima tidak boleh melebihi stok tersedia (${barangDropdownData[barangId]})!`);
+                } else {
+                    removeError($row);
+                }
+            }
+        });
+
+        return isValid;
+    }
+
+    function highlightError($row, message) {
+        // Highlight the field with error
+        const $input = $row.find('input[name$="-qty_terima"]');
+        $input.addClass('is-invalid');
+
+        // Add error message
+        if ($input.siblings('.invalid-feedback').length === 0) {
+            $input.after(`<div class="invalid-feedback">${message}</div>`);
         }
-    });
+    }
+
+    function removeError($row) {
+        const $input = $row.find('input[name$="-qty_terima"]');
+        $input.removeClass('is-invalid');
+        $input.siblings('.invalid-feedback').remove();
+    }
+
+    // Update form indexes after adding or removing rows
+    function updateIndexes() {
+        const $rows = $formsetDiv.find('.formset-row');
+
+        $rows.each(function (index, row) {
+            const $row = $(row);
+
+            $row.find('input, select, label').each(function () {
+                const $field = $(this);
+                ['name', 'id', 'for'].forEach(attr => {
+                    const currentAttr = $field.attr(attr);
+                    if (currentAttr) {
+                        $field.attr(attr, currentAttr.replace(/-\d+-/, `-${index}-`));
+                    }
+                });
+            });
+        });
+
+        $totalFormsInput.val($rows.length);
+    }
 });

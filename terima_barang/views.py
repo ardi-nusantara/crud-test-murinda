@@ -1,19 +1,32 @@
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
+from django.db.models import F
+from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
 
-from preorder.models import PreOrder
-from terima_barang.forms import TerimaBarangForm
-from terima_barang.models import TerimaBarang
+from barang.models import MasterBarang
+from preorder.models import PreOrder, PreOrderDetail
+from terima_barang.forms import TerimaBarangForm, TerimaBarangDetailForm
+from terima_barang.models import TerimaBarang, TerimaBarangDetail
 
 
 def get_preorder_qty_po(request, id):
     preorder = get_object_or_404(PreOrder, pk=id)
     return JsonResponse({'qty_po': preorder.qty_po})
+
+
+def get_barang_by_preorder(request, preorder_id):
+    # Get all barang associated with the selected PreOrder and with qtystok >= 1
+    details = PreOrderDetail.objects.filter(preorder_id=preorder_id, kode_barang__qtystok__gte=1)
+    result = [
+        {"id": detail.kode_barang.pk, "kode": detail.kode_barang.kode, "nama": detail.kode_barang.nama, "qtystok": detail.kode_barang.qtystok}
+        for detail in details
+    ]
+    return JsonResponse({"barang": result})
 
 
 class TerimaBarangListView(SuccessMessageMixin, ListView):
@@ -36,16 +49,41 @@ class TerimaBarangCreateView(SuccessMessageMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['action_type'] = 'create'
         context['submit_url'] = reverse('terima-barang:terima-barang-create')
+
+        TerimaBarangFormSet = inlineformset_factory(TerimaBarang, TerimaBarangDetail, form=TerimaBarangDetailForm,
+                                                    extra=1, can_delete=True)
+
+        if self.request.POST:
+            context['TerimaBarangFormSet'] = TerimaBarangFormSet(self.request.POST)
+        else:
+            context['TerimaBarangFormSet'] = TerimaBarangFormSet()
         return context
 
     def form_valid(self, form):
-        with transaction.atomic():
-            qty_terima = form.cleaned_data['qty_terima']
-            preorder = PreOrder.objects.get(pk=form.cleaned_data['pemasok'].pk)
-            preorder.qty_po = preorder.qty_po - qty_terima
-            preorder.qty_terima = preorder.qty_terima + qty_terima
-            preorder.save()
-        return super().form_valid(form)
+        context = self.get_context_data()
+        terima_barang_formset = context['TerimaBarangFormSet']
+
+        if terima_barang_formset.is_valid():
+            with transaction.atomic():
+                terima_barang = form.save()
+                terima_barang_formset.instance = terima_barang
+                terima_barang_formset.save()
+
+                # Update related PreOrderDetail and MasterBarang
+                for detail in terima_barang_formset.cleaned_data:
+                    kode_barang = detail['kode_barang']
+                    qty_terima = detail['qty_terima']
+
+                    # Update PreOrderDetail
+                    PreOrderDetail.objects.filter(preorder=form.cleaned_data['preorder'], kode_barang=kode_barang).update(
+                        qty_terima=F('qty_terima') + qty_terima)
+
+                    # Update MasterBarang stock
+                    MasterBarang.objects.filter(kode=kode_barang.kode).update(qtystok=F('qtystok') - qty_terima)
+
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
 
 
 class TerimaBarangUpdateView(SuccessMessageMixin, UpdateView):

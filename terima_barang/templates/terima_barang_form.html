@@ -20,6 +20,35 @@
             >
                 {% csrf_token %}
                 {{ form|crispy }}
+                <div id="terima-barang-formset">
+                    <button type="button" id="add-row-btn" class="btn btn-outline-primary mt-3 mb-3">+ Tambah Baris
+                    </button>
+                    {{ TerimaBarangFormSet.management_form }}
+                    {% for terima_barang_form in TerimaBarangFormSet %}
+                        <div class="formset-row row align-items-center justify-content-center mb-4"
+                             id="formset-row-{{ forloop.counter0 }}">
+                            {% for hidden in terima_barang_form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            <div style="display: none">
+                                {% if terima_barang_form.instance.pk %}{{ terima_barang_form.DELETE }}{% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ terima_barang_form.kode_barang|as_crispy_field }}
+                            </div>
+                            <div class="col-md-5">
+                                {{ terima_barang_form.qty_terima|as_crispy_field }}
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger btn mt-2 remove-row-btn">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
                 <div class="d-flex flex-row-reverse">
                     <button id="submit-btn" type="submit" value="submit"
                             class="btn btn-primary center col-sm-2">
