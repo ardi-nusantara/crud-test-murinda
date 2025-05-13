@@ -58,7 +58,6 @@ $(document).ready(function () {
 
         // Update indices and total forms count
         updateIndexes();
-        validateQty(); // Revalidate all rows when a row is removed
     }
 
     // Recalculate form indexes
@@ -90,89 +89,16 @@ $(document).ready(function () {
         $totalFormsInput.val($rows.length);
     }
 
-    // Validate qty_po when the input field is changed
-    async function validateQty() {
-        const $rows = $formsetDiv.find('.formset-row');
-        const barangTotals = {}; // To sum up `qty_po` values per barang
-
-        let isValid = true;
-
-        // Clear previous error messages
-        $rows.find('.invalid-feedback').remove();
-
-        const promises = $rows.map(async function (_, row) {
-            const $row = $(row);
-
-            // Get selected barang kode
-            const barangKode = $row.find('select[name$="-kode_barang"]').val();
-            const $qtyPoInput = $row.find('input[name$="-qty_po"]');
-            const qtyPo = parseInt($qtyPoInput.val(), 10) || 0;
-
-            if (!barangKode) {
-                return; // Skip rows with no selected barang
-            }
-
-            // Initialize running total for this barang
-            if (!barangTotals[barangKode]) {
-                barangTotals[barangKode] = 0;
-            }
-            barangTotals[barangKode] += qtyPo;
-
-            // AJAX call to fetch qtystok for the selected barang
-            try {
-                const response = await $.ajax({
-                    url: `/preorder/get-barang-qtystok/`, // Replace with the actual endpoint for fetching qtystok
-                    method: 'GET',
-                    data: { kode_barang: barangKode }, // Send the selected dropdown value
-                });
-
-                const qtystok = parseInt(response.qtystok, 10);
-
-                // Check if the aggregated qty_po exceeds qtystok
-                if (barangTotals[barangKode] > qtystok) {
-                    isValid = false;
-
-                    // Build and display the error message
-                    const errorMessage = $(
-                        '<div class="invalid-feedback" style="display: block; font-size: 12px; margin-top: 5px;">' +
-                        `<b>Qty Pesanan tidak boleh melebihi stok tersedia (${qtystok})!</b>` +
-                        '</div>'
-                    );
-
-                    // Append the error message after the input field
-                    $qtyPoInput.parent().append(errorMessage);
-
-                    // Highlight the input field with an error class
-                    $qtyPoInput.addClass('is-invalid');
-                } else {
-                    // If valid, remove any previous error highlight
-                    $qtyPoInput.removeClass('is-invalid');
-                }
-            } catch (error) {
-                console.error('Error fetching qtystok:', error);
-            }
-        }).get();
-
-        // Wait for all AJAX calls to complete
-        await Promise.all(promises);
-
-        return isValid;
-    }
-
-    // Add row event listener
+    // Event listener for adding a new row
     $addRowButton.on('click', function (e) {
         e.preventDefault();
         addRow();
     });
 
-    // Remove row event listener
+    // Event listener for removing a row
     $formsetDiv.on('click', '.remove-row-btn', function (e) {
         e.preventDefault();
-        removeRow($(this));
-    });
-
-    // Real-time validation on qty_po input change
-    $formsetDiv.on('input', 'input[name$="-qty_po"]', function () {
-        validateQty(); // Validate the entire formset on each input change
+        const $button = $(this);
+        removeRow($button);
     });
 });

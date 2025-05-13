@@ -1,155 +1,100 @@
 $(document).ready(function () {
-    const $formsetDiv = $('#terima-barang-formset');
-    const $addRowButton = $('#add-row-btn');
-    const $totalFormsInput = $('#id_terimabarangdetail-TOTAL_FORMS');
-    const $preorderSelect = $('#id_preorder');
+    const $formsetDiv = $('#terima-barang-formset'); // Formset container
+    const $preorderSelect = $('#id_preorder'); // PreOrder dropdown
+    let barangData = {}; // Data: {barangId: {qty_po, qty_terima, qtystok}}
 
-    let barangDropdownData = {};
-
-    // Fetch available barang when PreOrder changes
+    // When PreOrder is selected, fetch barang data
     $preorderSelect.on('change', function () {
-        const selectedPreorder = $(this).val();
+        const preorderId = $(this).val();
 
-        if (!selectedPreorder) {
-            // Reset dropdowns if no PreOrder is selected
-            $formsetDiv.find('select[name$="-kode_barang"]').empty().append('<option value="">-- Pilih Barang --</option>');
+        if (!preorderId) {
+            clearBarangDropdowns();
             return;
         }
 
-        $.ajax({
-            url: `/terima-barang/preorder/${selectedPreorder}/barang/`,
-            method: 'GET',
-            success: function (response) {
-                // Update barangDropdownData to store qtystok by barang.id
-                barangDropdownData = response.barang.reduce((acc, barang) => {
-                    acc[barang.id] = barang.qtystok;
-                    return acc;
-                }, {});
-
-                // Update all kode_barang dropdowns with the new options
-                $formsetDiv.find('select[name$="-kode_barang"]').each(function () {
-                    const $dropdown = $(this);
-                    $dropdown.empty().append('<option value="">-- Pilih Barang --</option>');
-                    response.barang.forEach(barang => {
-                        $dropdown.append(`<option value="${barang.id}">${barang.kode} - ${barang.nama} (Stok: ${barang.qtystok})</option>`);
-                    });
-                });
-            },
-            error: function () {
-                console.error('Failed to fetch barang data.');
-            }
+        // Fetch barang associated with selected PreOrder
+        $.get(`/terima-barang/preorder/${preorderId}/barang/`, function (response) {
+            barangData = formatBarangData(response.barang);
+            updateBarangDropdowns();
+        }).fail(function () {
+            console.error('Error fetching barang data.');
         });
     });
 
-    // Validate qty_terima in real-time
+    // Handle live validation for qty_terima inputs
     $formsetDiv.on('input', 'input[name$="-qty_terima"]', function () {
-        validateQty();
+        validateQtyTerima();
     });
 
-    // Add new row
-    $addRowButton.on('click', function (e) {
-        e.preventDefault();
-        const currentFormCount = parseInt($totalFormsInput.val(), 10);
-        const $newRow = $formsetDiv.find('.formset-row').first().clone();
-
-        // Update attributes in the new row
-        $newRow.html(
-            $newRow.html()
-                .replace(/-0-/g, `-${currentFormCount}-`)
-                .replace(/__prefix__/g, currentFormCount)
-        );
-
-        // Reset field values
-        $newRow.find('input, select').val('');
-        $newRow.find('.invalid-feedback').remove();
-        $formsetDiv.append($newRow);
-
-        $totalFormsInput.val(currentFormCount + 1);
-    });
-
-    // Remove row handler
-    $formsetDiv.on('click', '.remove-row-btn', function (e) {
-        e.preventDefault();
-        const $row = $(this).closest('.formset-row');
-
-        // Mark the row for deletion if it exists on the server, otherwise remove it
-        const $deleteCheckbox = $row.find('input[type="checkbox"][name$="-DELETE"]');
-        if ($deleteCheckbox.length) {
-            $deleteCheckbox.prop('checked', true); // Mark for deletion
-            $row.hide(); // Hide the row
-        } else {
-            $row.remove(); // Remove from DOM
-        }
-
-        updateIndexes(); // Update form indexes
-        validateQty(); // Revalidate the formset
-    });
-
-    // Validation logic
-    function validateQty() {
-        const barangTotals = {};
-        let isValid = true;
-
-        // Calculate running totals per barang
-        $formsetDiv.find('.formset-row').each(function () {
-            const $row = $(this);
-            const barangId = $row.find('select[name$="-kode_barang"]').val(); // Use the selected barang.id
-            const qtyTerima = parseInt($row.find('input[name$="-qty_terima"]').val(), 10) || 0;
-
-            if (barangId) {
-                if (!barangTotals[barangId]) {
-                    barangTotals[barangId] = 0;
-                }
-                barangTotals[barangId] += qtyTerima;
-
-                // Check if the total exceeds the stock for the selected barang.id
-                if (barangTotals[barangId] > barangDropdownData[barangId]) {
-                    isValid = false;
-                    highlightError($row, `Total Qty Terima tidak boleh melebihi stok tersedia (${barangDropdownData[barangId]})!`);
-                } else {
-                    removeError($row);
-                }
-            }
-        });
-
-        return isValid;
+    // Format raw barang data into a usable structure
+    function formatBarangData(barangList) {
+        return barangList.reduce((data, barang) => {
+            data[barang.id] = { ...barang }; // Store barang info by id
+            return data;
+        }, {});
     }
 
-    function highlightError($row, message) {
-        // Highlight the field with error
+    // Update all barang dropdowns in the formset
+    function updateBarangDropdowns() {
+        const options = Object.entries(barangData)
+            .map(([id, { kode, nama, qty_po, qty_terima, qtystok }]) =>
+                `<option value="${id}">${kode} - ${nama} (PO: ${qty_po}, Received: ${qty_terima}, Stock: ${qtystok})</option>`
+            )
+            .join('');
+
+        $formsetDiv.find('select[name$="-kode_barang"]').html(`<option value="">-- Pilih Barang --</option>${options}`);
+    }
+
+    // Clear all barang dropdowns
+    function clearBarangDropdowns() {
+        barangData = {};
+        $formsetDiv.find('select[name$="-kode_barang"]').html('<option value="">-- Pilih Barang --</option>');
+    }
+
+    // Validate total qty_terima for each barang
+    function validateQtyTerima() {
+        const totalQtyByBarang = {}; // Track total qty_terima per barang
+        let isValid = true; // Form validity
+
+        // Iterate each row in the formset
+        $formsetDiv.find('.formset-row').each(function () {
+            const $row = $(this);
+            const barangId = $row.find('select[name$="-kode_barang"]').val();
+            const qtyTerima = parseInt($row.find('input[name$="-qty_terima"]').val(), 10) || 0;
+
+            // Skip validation if no barang is selected
+            if (!barangId) return;
+
+            totalQtyByBarang[barangId] = (totalQtyByBarang[barangId] || 0) + qtyTerima; // Increment total for the barang
+
+            // Validate against remaining allowable qty
+            const { qty_po, qty_terima } = barangData[barangId];
+            const maxAllowedQty = qty_po - qty_terima;
+
+            if (totalQtyByBarang[barangId] > maxAllowedQty) {
+                isValid = false;
+                showValidationError($row, `Exceeds allowed limit: ${maxAllowedQty}`);
+            } else {
+                clearValidationError($row);
+            }
+        });
+
+        return isValid; // Return overall validity
+    }
+
+    // Show validation error on a specific row
+    function showValidationError($row, message) {
         const $input = $row.find('input[name$="-qty_terima"]');
         $input.addClass('is-invalid');
-
-        // Add error message
         if ($input.siblings('.invalid-feedback').length === 0) {
             $input.after(`<div class="invalid-feedback">${message}</div>`);
         }
     }
 
-    function removeError($row) {
+    // Clear validation error on a specific row
+    function clearValidationError($row) {
         const $input = $row.find('input[name$="-qty_terima"]');
         $input.removeClass('is-invalid');
         $input.siblings('.invalid-feedback').remove();
-    }
-
-    // Update form indexes after adding or removing rows
-    function updateIndexes() {
-        const $rows = $formsetDiv.find('.formset-row');
-
-        $rows.each(function (index, row) {
-            const $row = $(row);
-
-            $row.find('input, select, label').each(function () {
-                const $field = $(this);
-                ['name', 'id', 'for'].forEach(attr => {
-                    const currentAttr = $field.attr(attr);
-                    if (currentAttr) {
-                        $field.attr(attr, currentAttr.replace(/-\d+-/, `-${index}-`));
-                    }
-                });
-            });
-        });
-
-        $totalFormsInput.val($rows.length);
     }
 });
